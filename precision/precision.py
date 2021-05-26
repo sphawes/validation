@@ -8,12 +8,12 @@ import json
 import sys
 import atexit
 
-port = '/dev/cu.usbmodem20593682424D1'
-ser = serial.Serial(port, 115200)
+port = '/dev/ttyACM0' 
+ser = serial.Serial(port, 115200, timeout=2)
 ser.flushInput()
 
 font = cv2.FONT_HERSHEY_SIMPLEX
-hsvLower = (90, 30, 100)
+hsvLower = (90, 100, 220)
 hsvUpper = (120, 255, 255)
 w = 640.0
 minRadius = 10
@@ -26,7 +26,7 @@ def exit_handler():
 atexit.register(exit_handler)
 
 #connect to webcam
-capture = cv2.VideoCapture(2)
+capture = cv2.VideoCapture(0)
 #print(capture.get(cv2.CAP_PROP_FPS))
 
 #logging file setup
@@ -36,6 +36,7 @@ f.write("Index Precision Lifetime Test started at " + epoch + ".\n")
 
 print("homing...")
 ser.write("G28 R\n".encode())
+ser.write("M205 T75\n".encode())
 print("sent homing")
 #hang until we get a response from Marlin
 last_command_complete = False
@@ -45,7 +46,7 @@ while(last_command_complete == False):
     if(response == b'ok\n'):
         last_command_complete = True
 
-# #main loop, one cycle results in a row in the csv
+# # #main loop, one cycle results in a row in the csv
 while True:
     print("Starting the while loop!")
 
@@ -60,16 +61,18 @@ while True:
 
     #hang until all moves are complete so we capture an image only after the head is in position
     last_command_complete = False
+    timeout_time = time.time()
     while(last_command_complete == False):
         response = ser.read_until()
         print(response)
-        if(response == b'test\r\n'):
+        if(response == b'test\r\n' or time.time() - timeout_time > 60):
             last_command_complete = True
     last_command_complete = False
+    timeout_time = time.time()
     while(last_command_complete == False):
         response = ser.read_until()
         print(response)
-        if(response == b'ok\n'):
+        if(response == b'ok\n' or time.time() - timeout_time > 5):
             last_command_complete = True
 
     time.sleep(1)
