@@ -50,7 +50,7 @@ while(last_command_complete == False):
 while True:
     print("Starting the while loop!")
 
-    g = open('cycle.gcode','r')
+    g = open('static.gcode','r')
     for line in g:
         l = line.strip() # Strip all EOL characters for consistency
         print('Sending: ' + l)
