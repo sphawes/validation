@@ -31,7 +31,7 @@ capture = cv2.VideoCapture(0)
 
 #logging file setup
 epoch = str(math.floor(time.time()))
-f = open("log/" + epoch + ".csv", "x")
+f = open("log/" + sys.argv[1] + "_" +  epoch + ".csv", "x")
 f.write("Index Precision Lifetime Test started at " + epoch + ".\n")
 
 print("homing...")
