@@ -8,21 +8,22 @@ import json
 import sys
 import atexit
 
+#defining port and cv thresholds
 port = '/dev/ttyACM0' 
-ser = serial.Serial(port, 115200, timeout=2)
-ser.flushInput()
-
-font = cv2.FONT_HERSHEY_SIMPLEX
 hsvLower = (90, 100, 220)
 hsvUpper = (120, 255, 255)
+
 w = 640.0
 minRadius = 10
 buffer_string = ''
 last_received = ''
+font = cv2.FONT_HERSHEY_SIMPLEX
+ser = serial.Serial(port, 115200, timeout=2)
+ser.flushInput()
 
 def exit_handler():
     ser.close()
-
+    
 atexit.register(exit_handler)
 
 #connect to webcam
@@ -32,12 +33,14 @@ capture = cv2.VideoCapture(0)
 #logging file setup
 epoch = str(math.floor(time.time()))
 f = open("log/" + sys.argv[1] + "_" +  epoch + ".csv", "x")
-f.write("Index Precision Lifetime Test started at " + epoch + ".\n")
+f.write("x_pos_pixel, y_pos_pixel")
 
+#home machine and set speed
 print("homing...")
 ser.write("G28 R\n".encode())
 ser.write("M205 T75\n".encode())
 print("sent homing")
+
 #hang until we get a response from Marlin
 last_command_complete = False
 while(last_command_complete == False):
@@ -46,11 +49,12 @@ while(last_command_complete == False):
     if(response == b'ok\n'):
         last_command_complete = True
 
-# # #main loop, one cycle results in a row in the csv
+#----------
+#main loop, one cycle results in a row in the csv
+#----------
 while True:
-    print("Starting the while loop!")
-
-    g = open('static.gcode','r')
+    #defines which test should be run
+    g = open('xy_cycle.gcode','r')
     for line in g:
         l = line.strip() # Strip all EOL characters for consistency
         print('Sending: ' + l)
@@ -60,6 +64,7 @@ while True:
         print(grbl_out.strip())
 
     #hang until all moves are complete so we capture an image only after the head is in position
+    #for some reason, Marlin randomly chooses to not send back the M118 string, so I added a timeout to this bit of blocking code that is long enough for a ~30 second cycle
     last_command_complete = False
     timeout_time = time.time()
     while(last_command_complete == False):
@@ -103,7 +108,7 @@ while True:
     x = 0
     y = 0
 
-	# only proceed if at least one contour was found
+    #only proceed if at least one contour was found
     if len(cnts) > 0:
 		# find the largest contour in the mask, then use
 		# it to compute the minimum enclosing circle and
