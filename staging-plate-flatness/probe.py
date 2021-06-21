@@ -60,7 +60,7 @@ while True:
     while(last_command_complete == False):
         response = ser.read_until()
         print(response)
-        if(response == b'test\r\n' or time.time() - timeout_time > 60):
+        if(response == b'test\r\n' or time.time() - timeout_time > 10040):
             last_command_complete = True
     last_command_complete = False
     timeout_time = time.time()
@@ -69,6 +69,8 @@ while True:
         print(response)
         if(response == b'ok\n' or time.time() - timeout_time > 5):
             last_command_complete = True
-
+    while True:
+        #do nothing
+        print("exited loop")
     if cv2.waitKey(1) & 0xFF is ord(' '):
         break
