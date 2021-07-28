@@ -10,7 +10,7 @@ import atexit
 
 #defining port and cv thresholds
 port = '/dev/ttyACM0' 
-hsvLower = (90, 100, 220)
+hsvLower = (90, 100, 230)
 hsvUpper = (120, 255, 255)
 
 w = 640.0
@@ -32,13 +32,16 @@ capture = cv2.VideoCapture(0)
 
 #logging file setup
 epoch = str(math.floor(time.time()))
-f = open("log/" + sys.argv[1] + "_" +  epoch + ".csv", "x")
+filename = "log/" + sys.argv[1] + "_" + epoch + ".csv"
+f = open(filename, "x")
 f.write("x_pos_pixel, y_pos_pixel")
+f.close()
 
 #home machine and set speed
 print("homing...")
 ser.write("G28 R\n".encode())
 ser.write("M205 T75\n".encode())
+ser.write("M92 X57.15 Y40.50 Z57.15 E4.43\n".encode())
 print("sent homing")
 
 #hang until we get a response from Marlin
@@ -54,7 +57,7 @@ while(last_command_complete == False):
 #----------
 while True:
     #defines which test should be run
-    g = open('xy_cycle.gcode','r')
+    g = open('xy_static.gcode','r')
     for line in g:
         l = line.strip() # Strip all EOL characters for consistency
         print('Sending: ' + l)
@@ -132,7 +135,11 @@ while True:
         y = -1
 
     # prints data to csv
+    f = open(filename, "a")
+
     f.write(str(x) + ", " + str(y) + "\n")
+
+    f.close()
 
     #prints flipped image with tracked blob superimposed
     image = cv2.flip(image, 1)
