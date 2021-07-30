@@ -62,7 +62,7 @@ while True:
         elif i==2:
             g = open('from_front.gcode','r')
         else:
-            g = open('from_right.gcode','r')
+            g = open('from_left.gcode','r')
 
         for line in g:
             l = line.strip() # Strip all EOL characters for consistency
