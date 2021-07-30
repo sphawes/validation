@@ -6,15 +6,17 @@ import numpy as np
 import threading
 import json
 import sys
+import subprocess
 import atexit
 
 #defining port and cv thresholds
 port = '/dev/ttyACM0' 
-hsvLower = (90, 100, 230)
+hsvLower = (80, 160, 160)
 hsvUpper = (120, 255, 255)
 
 w = 640.0
 minRadius = 10
+maxRadius = 40
 buffer_string = ''
 last_received = ''
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -29,6 +31,15 @@ atexit.register(exit_handler)
 #connect to webcam
 capture = cv2.VideoCapture(0)
 #print(capture.get(cv2.CAP_PROP_FPS))
+
+#setting camera exposure config
+bash1 = "v4l2-ctl -c exposure_auto=1"
+bash2 = "v4l2-ctl -c exposure_absolute=25"
+process = subprocess.Popen(bash1.split(), stdout=subprocess.PIPE)
+output, error = process.communicate()
+
+process2 = subprocess.Popen(bash2.split(), stdout=subprocess.PIPE)
+output,error = process2.communicate()
 
 #logging file setup
 epoch = str(math.floor(time.time()))
@@ -57,7 +68,7 @@ while(last_command_complete == False):
 #----------
 while True:
     #defines which test should be run
-    g = open('xy_static.gcode','r')
+    g = open('xy_cycle.gcode','r')
     for line in g:
         l = line.strip() # Strip all EOL characters for consistency
         print('Sending: ' + l)
@@ -122,7 +133,7 @@ while True:
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
 		# only proceed if the radius meets a minimum size
-        if radius > minRadius:
+        if radius > minRadius and radius < maxRadius:
 
             cv2.circle(image, (int(x), int(y)), int(radius), (0, 255, 255), 2)
             cv2.circle(image, center, 5, (0, 0, 0), -1)
@@ -147,6 +158,8 @@ while True:
 
     cv2.imshow('test', mask1)
 
+    cv2.imwrite("image.jpg", image)
+    cv2.imwrite("mask.jpg", mask1)
     #turn off the ring light
     ser.write("M150 P0\n".encode())
 
